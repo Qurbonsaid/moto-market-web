@@ -1,7 +1,7 @@
-import { Home, Package, ShoppingCart, Receipt, LogOut, KeyRound } from "lucide-react";
+import { Home, Package, ShoppingCart, Receipt, KeyRound, Users } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { getUserRole, clearAuth } from "@/lib/storage";
-import { useNavigate, useLocation } from "react-router-dom";
+import { getUserRole } from "@/lib/storage";
+import { useLocation } from "react-router-dom";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -11,18 +11,12 @@ import { changePassword } from "@/lib/storage";
 import { toast } from "sonner";
 
 export function AppSidebar() {
-  const navigate = useNavigate();
   const location = useLocation();
   const role = getUserRole();
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
-  const handleLogout = () => {
-    clearAuth();
-    navigate("/login");
-  };
 
   const handleChangePassword = () => {
     if (newPassword !== confirmPassword) {
@@ -45,7 +39,10 @@ export function AppSidebar() {
     { title: "Bosh sahifa", path: "/", icon: Home },
     { title: "Mahsulotlar", path: "/mahsulotlar", icon: Package },
     { title: "Sotuvlar", path: "/sotuvlar", icon: ShoppingCart },
-    ...(role === 'direktor' ? [{ title: "Xarajatlar", path: "/xarajatlar", icon: Receipt }] : []),
+    ...(role === 'direktor' ? [
+      { title: "Xarajatlar", path: "/xarajatlar", icon: Receipt },
+      { title: "Sotuvchilar", path: "/sotuvchilar", icon: Users }
+    ] : []),
   ];
 
   return (
@@ -76,19 +73,12 @@ export function AppSidebar() {
           {role === 'direktor' && (
             <button
               onClick={() => setShowPasswordDialog(true)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors w-full mb-1"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors w-full"
             >
               <KeyRound size={18} />
               <span className="text-sm">Parolni o'zgartirish</span>
             </button>
           )}
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors w-full"
-          >
-            <LogOut size={18} />
-            <span className="text-sm">Chiqish</span>
-          </button>
         </div>
       </div>
 

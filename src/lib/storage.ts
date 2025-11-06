@@ -17,7 +17,8 @@ export interface Sale {
   narx: number;
   jami: number;
   foyda: number;
-  sotuvchi: string;
+  sotuvchi: string; // Now stores seller ID
+  sotuvchiIsm?: string; // Seller name for display
   mijoz?: string;
 }
 
@@ -28,12 +29,19 @@ export interface Expense {
   summa: number;
 }
 
+export interface Seller {
+  id: string;
+  ism: string;
+  telefon?: string;
+}
+
 export type UserRole = 'direktor' | 'sotuvchi';
 
 const STORAGE_KEYS = {
   PRODUCTS: 'motomarket_products',
   SALES: 'motomarket_sales',
   EXPENSES: 'motomarket_expenses',
+  SELLERS: 'motomarket_sellers',
   USER_ROLE: 'motomarket_role',
   PASSWORD: 'motomarket_password',
 };
@@ -62,8 +70,9 @@ export const setUserRole = (role: UserRole) => {
   localStorage.setItem(STORAGE_KEYS.USER_ROLE, role);
 };
 
-export const getUserRole = (): UserRole | null => {
-  return localStorage.getItem(STORAGE_KEYS.USER_ROLE) as UserRole | null;
+export const getUserRole = (): UserRole => {
+  const role = localStorage.getItem(STORAGE_KEYS.USER_ROLE);
+  return (role as UserRole) || 'sotuvchi'; // Default to seller mode
 };
 
 export const clearAuth = () => {
@@ -129,6 +138,34 @@ export const saveExpense = (expense: Omit<Expense, 'id'>) => {
 export const deleteExpense = (id: string) => {
   const expenses = getExpenses().filter(e => e.id !== id);
   localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(expenses));
+};
+
+// Sellers
+export const getSellers = (): Seller[] => {
+  const data = localStorage.getItem(STORAGE_KEYS.SELLERS);
+  return data ? JSON.parse(data) : [];
+};
+
+export const saveSeller = (seller: Omit<Seller, 'id'>) => {
+  const sellers = getSellers();
+  sellers.push({ ...seller, id: Date.now().toString() });
+  localStorage.setItem(STORAGE_KEYS.SELLERS, JSON.stringify(sellers));
+};
+
+export const deleteSeller = (id: string) => {
+  const sellers = getSellers().filter(s => s.id !== id);
+  localStorage.setItem(STORAGE_KEYS.SELLERS, JSON.stringify(sellers));
+};
+
+// Seller statistics
+export const getSellerStats = (sellerId: string) => {
+  const sales = getSales().filter(s => s.sotuvchi === sellerId);
+  
+  return {
+    sotuvlarSoni: sales.length,
+    jamiSumma: sales.reduce((sum, sale) => sum + sale.jami, 0),
+    jamiFoyda: sales.reduce((sum, sale) => sum + sale.foyda, 0),
+  };
 };
 
 // Statistics

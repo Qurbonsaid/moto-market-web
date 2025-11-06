@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { getSales, saveSale, getProducts, getUserRole } from "@/lib/storage";
+import { getSales, saveSale, getProducts, getUserRole, getSellers } from "@/lib/storage";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -12,10 +12,12 @@ export default function Sales() {
   const role = getUserRole();
   const [sales, setSales] = useState(getSales().reverse());
   const [products] = useState(getProducts());
+  const [sellers] = useState(getSellers());
   const [showDialog, setShowDialog] = useState(false);
 
   const [formData, setFormData] = useState({
     mahsulotId: "",
+    sotuvchiId: "",
     miqdor: 1,
     narx: 0,
     mijoz: "",
@@ -30,6 +32,7 @@ export default function Sales() {
   const handleOpenDialog = () => {
     setFormData({
       mahsulotId: "",
+      sotuvchiId: "",
       miqdor: 1,
       narx: 0,
       mijoz: "",
@@ -52,10 +55,17 @@ export default function Sales() {
       return;
     }
 
+    if (!formData.sotuvchiId) {
+      toast.error("Sotuvchi tanlanmagan");
+      return;
+    }
+
     if (formData.miqdor > selectedProduct.miqdor) {
       toast.error("Yetarli emas!");
       return;
     }
+
+    const selectedSeller = sellers.find(s => s.id === formData.sotuvchiId);
 
     saveSale({
       sana: new Date().toISOString(),
@@ -65,7 +75,8 @@ export default function Sales() {
       narx: formData.narx,
       jami,
       foyda,
-      sotuvchi: role === 'direktor' ? 'Direktor' : 'Sotuvchi',
+      sotuvchi: formData.sotuvchiId,
+      sotuvchiIsm: selectedSeller?.ism || 'Noma\'lum',
       mijoz: formData.mijoz,
     });
 
@@ -114,7 +125,7 @@ export default function Sales() {
                     {role === 'direktor' && (
                       <td className="py-3 px-4 text-sm font-bold text-success">{formatCurrency(sale.foyda)}</td>
                     )}
-                    <td className="py-3 px-4 text-sm">{sale.sotuvchi}</td>
+                    <td className="py-3 px-4 text-sm">{sale.sotuvchiIsm || sale.sotuvchi}</td>
                   </tr>
                 ))}
               </tbody>
@@ -129,6 +140,22 @@ export default function Sales() {
             <DialogTitle>Yangi sotuv</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            <div>
+              <Label htmlFor="seller">Sotuvchi *</Label>
+              <select
+                id="seller"
+                value={formData.sotuvchiId}
+                onChange={(e) => setFormData({ ...formData, sotuvchiId: e.target.value })}
+                className="w-full mt-1 px-3 py-2 border border-input rounded-md bg-background"
+              >
+                <option value="">Sotuvchini tanlang...</option>
+                {sellers.map((seller) => (
+                  <option key={seller.id} value={seller.id}>
+                    {seller.ism}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div>
               <Label htmlFor="product">Mahsulot *</Label>
               <select

@@ -63,7 +63,7 @@ export default function Dashboard() {
                     {role === 'direktor' && (
                       <td className="py-3 px-4 text-sm font-medium text-success">{formatCurrency(sale.foyda)}</td>
                     )}
-                    <td className="py-3 px-4 text-sm">{sale.sotuvchi}</td>
+                    <td className="py-3 px-4 text-sm">{sale.sotuvchiIsm || sale.sotuvchi}</td>
                   </tr>
                 ))}
               </tbody>
