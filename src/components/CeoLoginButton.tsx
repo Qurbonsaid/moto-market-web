@@ -3,34 +3,41 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { verifyPassword, setUserRole, getUserRole, clearAuth } from "@/lib/storage";
 import { toast } from "sonner";
 import { LogOut } from "lucide-react";
+import { useAuthStore } from "@/store/authStore";
 
 export function CeoLoginButton() {
   const [showDialog, setShowDialog] = useState(false);
   const [password, setPassword] = useState("");
-  const role = getUserRole();
+  const [isVerifying, setIsVerifying] = useState(false);
+  const { isCeo, setCeo, logout } = useAuthStore();
 
-  const handleLogin = () => {
-    if (verifyPassword(password)) {
-      setUserRole('direktor');
-      setShowDialog(false);
-      setPassword("");
-      toast.success("Direktor rejimiga o'tildi");
-      window.location.reload(); // Refresh to update UI
-    } else {
-      toast.error("Parol noto'g'ri");
+  const handleLogin = async () => {
+    setIsVerifying(true);
+    try {
+      const isValid = await window.api.verifyCeoPassword(password);
+      if (isValid) {
+        setCeo(true);
+        setShowDialog(false);
+        setPassword("");
+        toast.success("Direktor rejimiga o'tildi");
+      } else {
+        toast.error("Parol noto'g'ri");
+      }
+    } catch (error) {
+      toast.error("Xatolik yuz berdi");
+    } finally {
+      setIsVerifying(false);
     }
   };
 
   const handleLogout = () => {
-    clearAuth();
+    logout();
     toast.success("Sotuvchi rejimiga o'tildi");
-    window.location.reload();
   };
 
-  if (role === 'direktor') {
+  if (isCeo) {
     return (
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium">Direktor rejimi</span>
@@ -78,7 +85,9 @@ export function CeoLoginButton() {
               <Button variant="outline" onClick={() => setShowDialog(false)}>
                 Bekor qilish
               </Button>
-              <Button onClick={handleLogin}>Kirish</Button>
+              <Button onClick={handleLogin} disabled={isVerifying}>
+                {isVerifying ? "Tekshirilmoqda..." : "Kirish"}
+              </Button>
             </div>
           </div>
         </DialogContent>

@@ -8,10 +8,11 @@ import Products from "./pages/Products";
 import Sales from "./pages/Sales";
 import Expenses from "./pages/Expenses";
 import Sellers from "./pages/Sellers";
+import IncomingStock from "./pages/IncomingStock";
 import NotFound from "./pages/NotFound";
 import { AppSidebar } from "./components/AppSidebar";
 import { CeoLoginButton } from "./components/CeoLoginButton";
-import { getUserRole } from "./lib/storage";
+import { useAuthStore } from "./store/authStore";
 
 const queryClient = new QueryClient();
 
@@ -29,7 +30,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => (
 );
 
 const App = () => {
-  const role = getUserRole();
+  const { isCeo } = useAuthStore();
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -62,8 +63,16 @@ const App = () => {
                 </MainLayout>
               }
             />
-            {role === 'direktor' && (
+            {isCeo && (
               <>
+                <Route
+                  path="/kirim-tovarlar"
+                  element={
+                    <MainLayout>
+                      <IncomingStock />
+                    </MainLayout>
+                  }
+                />
                 <Route
                   path="/xarajatlar"
                   element={
